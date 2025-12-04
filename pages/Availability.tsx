@@ -254,7 +254,7 @@ const Availability = () => {
             {daysOfWeek.map((day) => {
                const dayConfig = schedule?.[day.key];
                if (!dayConfig) return null;
-               // Using the render logic similar to before, but condensed for brevity in this specific file update
+               
                return (
                  <Card key={day.key} className={`border p-4 ${dayConfig.active ? 'border-indigo-100' : 'opacity-60'}`}>
                     <div className="flex items-center gap-3 mb-4">

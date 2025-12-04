@@ -16,8 +16,7 @@ import {
   XCircle,
   Truck,
   Timer,
-  CreditCard,
-  DollarSign
+  CreditCard
 } from 'lucide-react';
 import { 
   format, 
@@ -228,9 +227,42 @@ const Schedule = () => {
     setIsDayPanelOpen(true);
   };
 
-  // AI Handler (omitted for brevity, assume same)
   const handleAiRequest = async () => {
-     // ... logic reuse ...
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    try {
+      const result = await analyzeSchedulingRequest(aiPrompt, format(new Date(), 'yyyy-MM-dd HH:mm'));
+      if (result) {
+        const start = parseISO(result.start);
+        const end = parseISO(result.end);
+
+        setEditingAppt(null);
+        setFormData({
+          clientId: '',
+          serviceId: '',
+          providerId: providers.length > 0 ? providers[0].id : '',
+          title: result.title,
+          date: format(start, 'yyyy-MM-dd'),
+          startTime: format(start, 'HH:mm'),
+          endTime: format(end, 'HH:mm'),
+          status: 'confirmed',
+          notes: result.notes || '',
+          customFields: {},
+          price: 0,
+          paymentStatus: 'pending',
+          paymentMethod: ''
+        });
+        setIsModalOpen(true);
+        setAiPrompt('');
+      } else {
+        alert('Não foi possível entender o pedido. Tente ser mais específico, ex: "Agendar corte amanhã às 14h".');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar com IA.');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSendReminder = async (appt: Appointment) => {
@@ -243,12 +275,11 @@ const Schedule = () => {
        window.open(`https://wa.me/55${client.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else {
        navigator.clipboard.writeText(msg);
-       alert('Copiado: ' + msg);
+       alert('Mensagem copiada: ' + msg);
     }
   };
 
-  // --- Views Renders (Calendar/List/Drawer) ---
-  // Reusing existing render functions, adding Custom Fields to drawer if needed
+  // --- Views Renders ---
   
   const renderCalendarView = () => {
     const startOfCurrentWeek = startOfWeek(selectedDate, { weekStartsOn: 0 });
@@ -370,6 +401,7 @@ const Schedule = () => {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
+             {dayAppts.length === 0 && <p className="text-slate-500 text-center py-4">Nenhum agendamento para este dia.</p>}
              {dayAppts.map(appt => {
                  const status = statusConfig[appt.status];
                  return (

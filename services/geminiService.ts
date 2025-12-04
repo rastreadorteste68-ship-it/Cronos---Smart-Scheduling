@@ -1,6 +1,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const apiKey = process.env.API_KEY || '';
+// Safe access to process.env for browser environments
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || '';
+  } catch (e) {
+    return '';
+  }
+};
+
+const apiKey = getApiKey();
 const ai = new GoogleGenAI({ apiKey });
 
 export interface ExtractedAppointment {
@@ -16,7 +25,7 @@ export const analyzeSchedulingRequest = async (
   currentDate: string
 ): Promise<ExtractedAppointment | null> => {
   if (!apiKey) {
-    console.warn("Gemini API Key is missing.");
+    console.warn("Gemini API Key is missing. Please configure process.env.API_KEY");
     return null;
   }
 
